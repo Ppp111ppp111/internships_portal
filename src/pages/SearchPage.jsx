@@ -13,6 +13,8 @@ import FilterChips from '../components/Filters/FilterChips';
 import FilterSidebar from '../components/Filters/FilterSidebar';
 import MobileFilterDrawer from '../components/Filters/MobileFilterDrawer';
 import InternshipCard from '../components/InternshipCard/InternshipCard';
+import PromoCard from '../components/InternshipCard/PromoCard';
+import Pagination from '../components/Pagination/Pagination';
 import { SkeletonGrid } from '../components/Loader/SkeletonCard';
 import Navbar from '../components/Navbar/Navbar';
 
@@ -22,9 +24,17 @@ function parseParams(searchParams) {
     locations: searchParams.get('locations')
       ? searchParams.get('locations').split(',').filter(Boolean)
       : [],
+    workFromHome: searchParams.get('wfh') === 'true',
+    partTime: searchParams.get('pt') === 'true',
     duration: parseInt(searchParams.get('duration') || '0', 10),
     stipend: parseInt(searchParams.get('stipend') || '0', 10),
+    keyword: searchParams.get('kw') || '',
     sort: searchParams.get('sort') || 'relevance',
+    jobOffer: searchParams.get('offer') === 'true',
+    fastResponse: searchParams.get('fast') === 'true',
+    earlyApplicant: searchParams.get('early') === 'true',
+    women: searchParams.get('women') === 'true',
+    startDate: searchParams.get('start') || '',
   };
 }
 
@@ -32,9 +42,17 @@ function filtersToParams(filters) {
   const params = {};
   if (filters.profile) params.profile = filters.profile;
   if (filters.locations.length > 0) params.locations = filters.locations.join(',');
+  if (filters.workFromHome) params.wfh = 'true';
+  if (filters.partTime) params.pt = 'true';
   if (filters.duration > 0) params.duration = String(filters.duration);
   if (filters.stipend > 0) params.stipend = String(filters.stipend);
+  if (filters.keyword) params.kw = filters.keyword;
   if (filters.sort && filters.sort !== 'relevance') params.sort = filters.sort;
+  if (filters.jobOffer) params.offer = 'true';
+  if (filters.fastResponse) params.fast = 'true';
+  if (filters.earlyApplicant) params.early = 'true';
+  if (filters.women) params.women = 'true';
+  if (filters.startDate) params.start = filters.startDate;
   return params;
 }
 
@@ -45,29 +63,38 @@ export default function SearchPage() {
 
   const initialFilters = useMemo(() => parseParams(searchParams), []);
   const [profileInput, setProfileInput] = useState(initialFilters.profile);
+  const [keywordInput, setKeywordInput] = useState(initialFilters.keyword);
   const [filters, setFilters] = useState({
     profile: initialFilters.profile,
     locations: initialFilters.locations,
+    workFromHome: initialFilters.workFromHome,
+    partTime: initialFilters.partTime,
     duration: initialFilters.duration,
     stipend: initialFilters.stipend,
+    keyword: initialFilters.keyword,
+    jobOffer: initialFilters.jobOffer,
+    fastResponse: initialFilters.fastResponse,
+    earlyApplicant: initialFilters.earlyApplicant,
+    women: initialFilters.women,
+    startDate: initialFilters.startDate,
   });
   const [sortBy, setSortBy] = useState(initialFilters.sort);
-  const [visibleCount, setVisibleCount] = useState(ITEMS_PER_PAGE);
+  const [currentPage, setCurrentPage] = useState(1);
   const [mobileFilterOpen, setMobileFilterOpen] = useState(false);
 
   const debouncedProfile = useDebounce(profileInput, 300);
-  const sentinelRef = useRef(null);
+  const debouncedKeyword = useDebounce(keywordInput, 300);
 
   useEffect(() => {
-    setFilters((f) => ({ ...f, profile: debouncedProfile }));
-  }, [debouncedProfile]);
+    setFilters((f) => ({ ...f, profile: debouncedProfile, keyword: debouncedKeyword }));
+  }, [debouncedProfile, debouncedKeyword]);
 
   useEffect(() => {
     setSearchParams(filtersToParams({ ...filters, sort: sortBy }), { replace: true });
   }, [filters, sortBy, setSearchParams]);
 
   useEffect(() => {
-    setVisibleCount(ITEMS_PER_PAGE);
+    setCurrentPage(1);
   }, [filters, sortBy]);
 
   const allLocations = useMemo(
@@ -85,36 +112,22 @@ export default function SearchPage() {
     [filteredInternships, sortBy]
   );
 
+  const totalPages = Math.ceil(sortedInternships.length / ITEMS_PER_PAGE);
+  const startIndex = (currentPage - 1) * ITEMS_PER_PAGE;
+
   const visibleInternships = useMemo(
-    () => sortedInternships.slice(0, visibleCount),
-    [sortedInternships, visibleCount]
+    () => sortedInternships.slice(startIndex, startIndex + ITEMS_PER_PAGE),
+    [sortedInternships, currentPage]
   );
-
-  const hasMore = visibleCount < sortedInternships.length;
-
-  useEffect(() => {
-    if (!sentinelRef.current || !hasMore) return;
-
-    const observer = new IntersectionObserver(
-      (entries) => {
-        if (entries[0].isIntersecting) {
-          setVisibleCount((c) => c + ITEMS_PER_PAGE);
-        }
-      },
-      { rootMargin: '200px' }
-    );
-
-    observer.observe(sentinelRef.current);
-    return () => observer.disconnect();
-  }, [hasMore, sortedInternships.length]);
 
   const handleFilterChange = useCallback((key, value) => {
     setFilters((f) => ({ ...f, [key]: value }));
   }, []);
 
   const handleClearAll = useCallback(() => {
-    setFilters({ profile: '', locations: [], duration: 0, stipend: 0 });
+    setFilters({ profile: '', locations: [], workFromHome: false, partTime: false, duration: 0, stipend: 0, keyword: '' });
     setProfileInput('');
+    setKeywordInput('');
     setSortBy('relevance');
   }, []);
 
@@ -126,10 +139,17 @@ export default function SearchPage() {
           return { ...f, profile: '' };
         case 'location':
           return { ...f, locations: f.locations.filter((l) => l !== value) };
+        case 'workFromHome':
+          return { ...f, workFromHome: false };
+        case 'partTime':
+          return { ...f, partTime: false };
         case 'duration':
           return { ...f, duration: 0 };
         case 'stipend':
           return { ...f, stipend: 0 };
+        case 'keyword':
+          setKeywordInput('');
+          return { ...f, keyword: '' };
         default:
           return f;
       }
@@ -139,21 +159,26 @@ export default function SearchPage() {
   const hasActiveFilters =
     filters.profile ||
     filters.locations.length > 0 ||
+    filters.workFromHome ||
+    filters.partTime ||
     filters.duration > 0 ||
-    filters.stipend > 0;
+    filters.stipend > 0 ||
+    filters.keyword ||
+    filters.jobOffer ||
+    filters.fastResponse ||
+    filters.earlyApplicant ||
+    filters.women ||
+    filters.startDate;
 
   return (
     <div className="min-h-screen bg-[var(--color-surface-alt)] dark:bg-slate-950">
       <Navbar savedCount={savedCount} />
 
       <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-24 pb-12">
-        <div className="mb-6">
-          <h1 className="text-2xl sm:text-3xl font-bold text-[var(--color-text-primary)] dark:text-white">
-            Internships
+        <div className="mb-6 text-center mt-4">
+          <h1 className="text-[22px] font-bold text-[#333333] dark:text-white">
+            {sortedInternships.length} internships
           </h1>
-          <p className="text-sm text-[var(--color-text-secondary)] dark:text-slate-400 mt-1">
-            Find the perfect internship to kickstart your career
-          </p>
         </div>
 
         <div className="flex flex-col lg:flex-row gap-6">
@@ -165,6 +190,8 @@ export default function SearchPage() {
               allLocations={allLocations}
               profileInput={profileInput}
               onProfileInputChange={setProfileInput}
+              keywordInput={keywordInput}
+              onKeywordInputChange={setKeywordInput}
             />
           </div>
 
@@ -212,9 +239,10 @@ export default function SearchPage() {
               />
             )}
 
-            {!loading && !error && sortedInternships.length > 0 && (
+                {!loading && !error && sortedInternships.length > 0 && (
               <>
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div className="flex flex-col gap-4">
+                  <PromoCard />
                   {visibleInternships.map((internship) => (
                     <InternshipCard
                       key={internship.id}
@@ -225,20 +253,14 @@ export default function SearchPage() {
                   ))}
                 </div>
 
-                {hasMore && (
-                  <div ref={sentinelRef} className="flex justify-center py-8">
-                    <div className="flex items-center gap-2 text-sm text-[var(--color-text-muted)]">
-                      <div className="w-5 h-5 border-2 border-blue-500/30 border-t-blue-500 rounded-full animate-spin" />
-                      Loading more...
-                    </div>
-                  </div>
-                )}
-
-                {!hasMore && sortedInternships.length > ITEMS_PER_PAGE && (
-                  <p className="text-center text-sm text-[var(--color-text-muted)] dark:text-slate-500 py-6">
-                    You&apos;ve reached the end
-                  </p>
-                )}
+                <Pagination 
+                  currentPage={currentPage} 
+                  totalPages={totalPages} 
+                  onPageChange={(page) => {
+                    setCurrentPage(page);
+                    window.scrollTo({ top: 0, behavior: 'smooth' });
+                  }} 
+                />
               </>
             )}
           </div>
@@ -253,7 +275,18 @@ export default function SearchPage() {
         <SlidersHorizontal size={20} />
         {hasActiveFilters && (
           <span className="absolute -top-1 -right-1 w-5 h-5 rounded-full bg-red-500 text-[10px] font-bold text-white flex items-center justify-center">
-            {filters.locations.length + (filters.profile ? 1 : 0) + (filters.duration ? 1 : 0) + (filters.stipend ? 1 : 0)}
+            {filters.locations.length + 
+             (filters.profile ? 1 : 0) + 
+             (filters.workFromHome ? 1 : 0) + 
+             (filters.partTime ? 1 : 0) + 
+             (filters.duration > 0 ? 1 : 0) + 
+             (filters.stipend > 0 ? 1 : 0) + 
+             (filters.keyword ? 1 : 0) + 
+             (filters.jobOffer ? 1 : 0) + 
+             (filters.fastResponse ? 1 : 0) + 
+             (filters.earlyApplicant ? 1 : 0) + 
+             (filters.women ? 1 : 0) + 
+             (filters.startDate ? 1 : 0)}
           </span>
         )}
       </button>

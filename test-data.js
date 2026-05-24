@@ -1,6 +1,4 @@
-import axios from 'axios';
-
-const API_URL = '/mockData.json';
+const API_URL = 'http://localhost:5173/mockData.json';
 
 function normalizeInternship(raw) {
   const durationMatch = raw.duration?.match(/(\d+)/);
@@ -19,8 +17,6 @@ function normalizeInternship(raw) {
     duration: raw.duration || '',
     durationMonths,
     startDate: raw.start_date || '',
-    startDateComparison: raw.start_date_comparison_format || raw.start_date1 || '',
-    segment: raw.segment || '',
     postedOn: raw.posted_on || '',
     postedLabel: raw.posted_by_label || '',
     postedLabelType: raw.posted_by_label_type || 'info',
@@ -39,42 +35,36 @@ function normalizeInternship(raw) {
   };
 }
 
-export async function fetchInternships() {
-  let data;
-
+async function fetchInternships() {
   try {
-    const res = await axios.get(API_URL, {
+    const res = await fetch(API_URL, {
       headers: { Accept: 'application/json' },
-      timeout: 10000,
     });
-    data = res.data;
+    
+    if (!res.ok) {
+        console.error('HTTP Error:', res.status, res.statusText);
+        return;
+    }
+    
+    const data = await res.json();
+    const { internships_meta, internship_ids } = data;
+
+    if (!internships_meta || !internship_ids) {
+      throw new Error('Invalid API response structure');
+    }
+
+    const baseInternships = internship_ids
+      .map((id) => internships_meta[id])
+      .filter(Boolean)
+      .map(normalizeInternship);
+
+    console.log('Successfully parsed', baseInternships.length, 'internships.');
+    if (baseInternships.length > 0) {
+        console.log('First internship:', baseInternships[0].title, 'at', baseInternships[0].companyName);
+    }
   } catch (error) {
     console.error('Error fetching internships:', error);
-    throw new Error('Failed to fetch internships from the API.');
   }
-
-  const { internships_meta, internship_ids } = data;
-
-  if (!internships_meta || !internship_ids) {
-    throw new Error('Invalid API response structure');
-  }
-
-  const baseInternships = internship_ids
-    .map((id) => internships_meta[id])
-    .filter(Boolean)
-    .map(normalizeInternship);
-
-  // To show exactly 156 pages in the UI as requested (156 pages * 12 items/page = 1872 items roughly)
-  // We duplicate the 10 mock results 187 times (1870 items total) -> 1870 / 12 = 155.8 -> 156 total pages.
-  const duplicatedInternships = [];
-  for (let i = 0; i < 187; i++) {
-    baseInternships.forEach((internship) => {
-      duplicatedInternships.push({
-        ...internship,
-        id: `${i}-${internship.id}` // Ensure unique IDs for React keys
-      });
-    });
-  }
-
-  return duplicatedInternships;
 }
+
+fetchInternships();

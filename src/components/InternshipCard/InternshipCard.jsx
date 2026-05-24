@@ -1,5 +1,5 @@
 import { memo, useCallback } from 'react';
-import { MapPin, Clock, Calendar, IndianRupee, Bookmark, BookmarkCheck, ExternalLink, Briefcase, Home } from 'lucide-react';
+import { MapPin, Clock, Calendar, IndianRupee, Bookmark, BookmarkCheck, ExternalLink, Briefcase, Home, Building, Zap } from 'lucide-react';
 
 function CompanyAvatar({ name, logo }) {
   if (logo) {
@@ -7,7 +7,7 @@ function CompanyAvatar({ name, logo }) {
       <img
         src={logo}
         alt={name}
-        className="w-10 h-10 rounded-xl object-contain bg-white dark:bg-slate-800 border border-[var(--color-border)] dark:border-slate-700"
+        className="w-12 h-12 rounded object-contain bg-white dark:bg-slate-800"
         onError={(e) => {
           e.target.style.display = 'none';
           e.target.nextSibling.style.display = 'flex';
@@ -45,11 +45,7 @@ function InternshipCard({ internship, isSaved, onToggleSave }) {
     stipendRaw,
     duration,
     postedLabel,
-    postedLabelType,
     isPPO,
-    labels,
-    startDate,
-    officeDays,
   } = internship;
 
   const handleSave = useCallback(
@@ -61,119 +57,96 @@ function InternshipCard({ internship, isSaved, onToggleSave }) {
     [id, onToggleSave]
   );
 
-  const postedColor =
-    postedLabelType === 'success'
-      ? 'text-emerald-600 dark:text-emerald-400 bg-emerald-50 dark:bg-emerald-950/40'
-      : 'text-blue-600 dark:text-blue-400 bg-blue-50 dark:bg-blue-950/40';
-
   return (
     <article
-      className="group relative bg-[var(--color-surface)] dark:bg-slate-900 rounded-2xl border border-[var(--color-border)] dark:border-slate-700/50 card-shadow hover:card-shadow-hover transition-all duration-300 hover:-translate-y-0.5 overflow-hidden"
+      className="group bg-white dark:bg-slate-900 rounded-xl border border-[var(--color-border)] dark:border-slate-700/50 mb-4 transition-all hover:shadow-md overflow-hidden relative"
     >
-      {isPPO && (
-        <div className="absolute top-0 right-12 bg-gradient-to-r from-amber-400 to-orange-400 text-[10px] font-bold text-white px-2.5 py-0.5 rounded-b-lg uppercase tracking-wider">
-          PPO
+      <div className="p-5 sm:p-6 pb-4">
+        <div className="flex items-center gap-1 mb-4">
+          <span className="inline-flex items-center px-2.5 py-0.5 rounded-full border border-[var(--color-blue-300)] text-[11px] font-medium text-[var(--color-blue-500)] bg-white dark:bg-slate-900">
+            Actively hiring
+          </span>
+          {isPPO && (
+            <span className="inline-flex items-center px-2.5 py-0.5 rounded-full border border-orange-200 text-[11px] font-medium text-orange-600 bg-white dark:bg-slate-900">
+              PPO
+            </span>
+          )}
         </div>
-      )}
 
-      <div className="p-5 sm:p-6">
         <div className="flex items-start justify-between gap-3 mb-4">
-          <div className="flex items-start gap-3 min-w-0">
-            <div className="flex-shrink-0 relative">
-              {companyLogo ? (
-                <>
-                  <CompanyAvatar name={companyName} logo={companyLogo} />
-                  <div className="hidden">
-                    <InitialsAvatar name={companyName} />
-                  </div>
-                </>
+          <div className="min-w-0 flex-1">
+            <h3 className="text-[18px] font-semibold text-[#333333] dark:text-white leading-tight mb-1 truncate">
+              {title}
+            </h3>
+            <p className="text-[14px] font-medium text-[#8a8a8a] dark:text-slate-400 truncate">
+              {companyName}
+            </p>
+          </div>
+          <div className="flex-shrink-0 relative">
+            <div className="w-12 h-12 rounded flex items-center justify-center text-blue-200 dark:text-blue-800 bg-white border border-[#eeeeee]">
+               {companyLogo ? <CompanyAvatar name={companyName} logo={companyLogo} /> : <Building size={24} className="text-slate-300" />}
+            </div>
+            <button
+              onClick={handleSave}
+              className="absolute -top-1 -right-8 p-1 rounded-full hover:bg-slate-100 transition-colors hidden sm:block"
+              aria-label={isSaved ? 'Unsave internship' : 'Save internship'}
+            >
+              {isSaved ? (
+                <BookmarkCheck size={18} className="text-[var(--color-blue-500)]" />
               ) : (
-                <InitialsAvatar name={companyName} />
+                <Bookmark size={18} className="text-[#8a8a8a] hover:text-[#333333]" />
               )}
+            </button>
+          </div>
+        </div>
+
+        <div className="flex items-center gap-1.5 text-[14px] text-[#444444] dark:text-slate-400 mb-4">
+          {workFromHome ? <Home size={16} className="text-[#8a8a8a]" /> : <MapPin size={16} className="text-[#8a8a8a]" />}
+          <span className="truncate">
+            {locationNames.length > 0 ? locationNames.join(', ') : 'Not specified'}
+          </span>
+        </div>
+
+        <div className="flex flex-wrap items-center gap-6 text-[14px] text-[#444444] dark:text-slate-400 mb-4">
+          <div className="flex flex-col gap-1">
+            <div className="flex items-center gap-1.5 text-[#8a8a8a] text-[12px] uppercase tracking-wide">
+              <Calendar size={14} /> Start Date
             </div>
-            <div className="min-w-0">
-              <h3 className="text-base font-semibold text-[var(--color-text-primary)] dark:text-white leading-tight group-hover:text-blue-600 dark:group-hover:text-blue-400 transition-colors truncate">
-                {title}
-              </h3>
-              <p className="text-sm text-[var(--color-text-secondary)] dark:text-slate-400 mt-0.5 truncate">
-                {companyName}
-              </p>
-            </div>
+            <span>Starts Immediately</span>
           </div>
 
-          <button
-            onClick={handleSave}
-            className="flex-shrink-0 p-2 rounded-xl hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors"
-            aria-label={isSaved ? 'Unsave internship' : 'Save internship'}
-          >
-            {isSaved ? (
-              <BookmarkCheck size={18} className="text-blue-600 dark:text-blue-400" />
-            ) : (
-              <Bookmark size={18} className="text-slate-400 dark:text-slate-500 group-hover:text-slate-500 dark:group-hover:text-slate-400 transition-colors" />
-            )}
-          </button>
+          <div className="flex flex-col gap-1">
+            <div className="flex items-center gap-1.5 text-[#8a8a8a] text-[12px] uppercase tracking-wide">
+              <Clock size={14} /> Duration
+            </div>
+            <span>{duration}</span>
+          </div>
+
+          <div className="flex flex-col gap-1">
+            <div className="flex items-center gap-1.5 text-[#8a8a8a] text-[12px] uppercase tracking-wide">
+              <IndianRupee size={14} /> Stipend
+            </div>
+            <span>{stipendRaw}</span>
+          </div>
         </div>
 
-        <div className="flex flex-wrap items-center gap-x-4 gap-y-2 text-sm text-[var(--color-text-secondary)] dark:text-slate-400 mb-4">
-          <span className="flex items-center gap-1.5">
-            {workFromHome ? <Home size={14} className="text-emerald-500" /> : <MapPin size={14} />}
-            <span className="truncate max-w-[180px]">
-              {locationNames.length > 0 ? locationNames.join(', ') : 'Not specified'}
-            </span>
+        <div className="flex flex-wrap items-center gap-3 pt-3 mt-4 border-t border-[#eeeeee] dark:border-slate-700/50">
+          <span className="text-[12px] font-medium px-2 py-1 rounded bg-[#e0f0fd] text-[var(--color-blue-500)] dark:bg-blue-900/30 flex items-center gap-1">
+            <Clock size={12} />
+            {postedLabel || '3 days ago'}
+          </span>
+          
+          <span className="text-[12px] text-[#444444] dark:text-slate-300 flex items-center gap-1">
+            <Zap size={12} fill="#eab308" className="text-yellow-500" />
+            Be an early applicant
           </span>
 
-          <span className="flex items-center gap-1.5">
-            <Clock size={14} />
-            {duration}
-          </span>
-
-          <span className="flex items-center gap-1.5">
-            <IndianRupee size={14} />
-            {stipendRaw}
-          </span>
-        </div>
-
-        <div className="flex flex-wrap items-center gap-2 mb-4">
-          {workFromHome && (
-            <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg text-xs font-medium bg-emerald-50 dark:bg-emerald-950/30 text-emerald-700 dark:text-emerald-400 border border-emerald-200/60 dark:border-emerald-800/30">
-              <Home size={11} />
-              Remote
+          {isPPO && (
+            <span className="text-[12px] font-medium px-2 py-1 rounded bg-[#fff8e1] text-[#b45309] dark:bg-yellow-900/20 dark:text-yellow-500 flex items-center gap-1">
+              <Briefcase size={12} />
+              Job offer
             </span>
           )}
-
-          {startDate && (
-            <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg text-xs font-medium bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400">
-              <Calendar size={11} />
-              {startDate}
-            </span>
-          )}
-
-          {officeDays && (
-            <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg text-xs font-medium bg-violet-50 dark:bg-violet-950/30 text-violet-700 dark:text-violet-400 border border-violet-200/60 dark:border-violet-800/30">
-              <Briefcase size={11} />
-              {officeDays}
-            </span>
-          )}
-
-          {labels.map((label) => (
-            <span
-              key={label}
-              className="px-2.5 py-1 rounded-lg text-xs font-medium bg-slate-100 dark:bg-slate-800 text-slate-500 dark:text-slate-400"
-            >
-              {label}
-            </span>
-          ))}
-        </div>
-
-        <div className="flex items-center justify-between pt-3 border-t border-[var(--color-border)] dark:border-slate-700/50">
-          <span className={`text-xs font-medium px-2.5 py-1 rounded-full ${postedColor}`}>
-            {postedLabel}
-          </span>
-
-          <button className="inline-flex items-center gap-1.5 px-4 py-2 rounded-xl bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 text-white text-sm font-semibold transition-all hover:shadow-lg hover:shadow-blue-500/20 active:scale-[0.97]">
-            Apply Now
-            <ExternalLink size={13} />
-          </button>
         </div>
       </div>
     </article>

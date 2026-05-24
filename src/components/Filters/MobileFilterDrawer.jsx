@@ -1,6 +1,7 @@
 import { memo, useMemo, useState, useEffect } from 'react';
 import { X, Search, RotateCcw, SlidersHorizontal } from 'lucide-react';
 import FilterSection from './FilterSection';
+import CustomDatePicker from './CustomDatePicker';
 import { STIPEND_OPTIONS, DURATION_OPTIONS } from '../../utils/constants';
 
 function MobileFilterDrawer({
@@ -34,7 +35,12 @@ function MobileFilterDrawer({
     filters.profile ||
     filters.locations.length > 0 ||
     filters.duration > 0 ||
-    filters.stipend > 0;
+    filters.stipend > 0 ||
+    filters.jobOffer ||
+    filters.fastResponse ||
+    filters.earlyApplicant ||
+    filters.women ||
+    filters.startDate;
 
   function handleLocationToggle(loc) {
     const current = filters.locations;
@@ -111,39 +117,97 @@ function MobileFilterDrawer({
             </div>
           </FilterSection>
 
-          <FilterSection title="Max Duration">
-            <div className="space-y-1.5">
-              {DURATION_OPTIONS.map((opt) => (
-                <label key={opt.value} className="flex items-center gap-2.5 py-1 px-1 cursor-pointer">
-                  <input
-                    type="radio"
-                    name="m-duration"
-                    checked={filters.duration === opt.value}
-                    onChange={() => onFilterChange('duration', opt.value)}
-                    className="w-4 h-4 border-slate-300 dark:border-slate-600 text-blue-600 focus:ring-blue-500/30"
-                  />
-                  <span className="text-sm text-[var(--color-text-secondary)] dark:text-slate-400">{opt.label}</span>
-                </label>
-              ))}
+          <FilterSection title="Desired minimum monthly stipend (₹)">
+            <div className="px-1 pt-2 pb-6">
+              <input
+                type="range"
+                min="0"
+                max="10000"
+                step="2000"
+                value={filters.stipend}
+                onChange={(e) => onFilterChange('stipend', parseInt(e.target.value, 10))}
+                className="w-full h-1 bg-[#eeeeee] dark:bg-slate-700 rounded-lg appearance-none cursor-pointer accent-[var(--color-blue-500)]"
+              />
+              <div className="flex justify-between text-[11px] text-[#999999] mt-2 font-medium">
+                <span>0</span>
+                <span>2K</span>
+                <span>4K</span>
+                <span>6K</span>
+                <span>8K</span>
+                <span>10K</span>
+              </div>
             </div>
           </FilterSection>
 
-          <FilterSection title="Min Stipend">
-            <div className="space-y-1.5">
-              {STIPEND_OPTIONS.map((opt) => (
-                <label key={opt.value} className="flex items-center gap-2.5 py-1 px-1 cursor-pointer">
-                  <input
-                    type="radio"
-                    name="m-stipend"
-                    checked={filters.stipend === opt.value}
-                    onChange={() => onFilterChange('stipend', opt.value)}
-                    className="w-4 h-4 border-slate-300 dark:border-slate-600 text-blue-600 focus:ring-blue-500/30"
-                  />
-                  <span className="text-sm text-[var(--color-text-secondary)] dark:text-slate-400">{opt.label}</span>
-                </label>
-              ))}
-            </div>
+          <FilterSection title="Starting from (or after)">
+            <CustomDatePicker 
+              value={filters.startDate}
+              onChange={(val) => onFilterChange('startDate', val)}
+            />
           </FilterSection>
+
+          <FilterSection title="Max. duration (months)">
+            <select
+              value={filters.duration}
+              onChange={(e) => onFilterChange('duration', parseInt(e.target.value, 10))}
+              className="w-full px-3 py-2 text-sm bg-white dark:bg-slate-800 border border-[var(--color-border)] dark:border-slate-700 rounded focus:outline-none focus:ring-1 focus:ring-[var(--color-blue-500)] focus:border-[var(--color-blue-500)] transition-all text-[#444444] dark:text-white"
+            >
+              <option value="0">Choose duration</option>
+              <option value="1">1 Month</option>
+              <option value="2">2 Months</option>
+              <option value="3">3 Months</option>
+              <option value="4">4 Months</option>
+              <option value="6">6 Months</option>
+              <option value="12">12 Months</option>
+            </select>
+          </FilterSection>
+
+          <div className="space-y-3 mt-4">
+            <label className="flex items-center gap-3 cursor-pointer group">
+              <input
+                type="checkbox"
+                checked={filters.jobOffer}
+                onChange={(e) => onFilterChange('jobOffer', e.target.checked)}
+                className="w-4 h-4 rounded-sm border-[#cccccc] text-[var(--color-blue-500)] focus:ring-0 focus:ring-offset-0 cursor-pointer"
+              />
+              <span className="text-[14px] text-[#444444] dark:text-slate-300">
+                Internships with job offer
+              </span>
+            </label>
+            <label className="flex items-center gap-3 cursor-pointer group">
+              <input
+                type="checkbox"
+                checked={filters.fastResponse}
+                onChange={(e) => onFilterChange('fastResponse', e.target.checked)}
+                className="w-4 h-4 rounded-sm border-[#cccccc] text-[var(--color-blue-500)] focus:ring-0 focus:ring-offset-0 cursor-pointer"
+              />
+              <span className="text-[14px] text-[#444444] dark:text-slate-300">
+                Fast response
+              </span>
+            </label>
+            <label className="flex items-center gap-3 cursor-pointer group">
+              <input
+                type="checkbox"
+                checked={filters.earlyApplicant}
+                onChange={(e) => onFilterChange('earlyApplicant', e.target.checked)}
+                className="w-4 h-4 rounded-sm border-[#cccccc] text-[var(--color-blue-500)] focus:ring-0 focus:ring-offset-0 cursor-pointer"
+              />
+              <span className="text-[14px] text-[#444444] dark:text-slate-300">
+                Early applicant
+              </span>
+            </label>
+            <label className="flex items-center gap-3 cursor-pointer group">
+              <input
+                type="checkbox"
+                checked={filters.women}
+                onChange={(e) => onFilterChange('women', e.target.checked)}
+                className="w-4 h-4 rounded-sm border-[#cccccc] text-[var(--color-blue-500)] focus:ring-0 focus:ring-offset-0 cursor-pointer"
+              />
+              <span className="text-[14px] text-[#444444] dark:text-slate-300">
+                Internships for women
+              </span>
+            </label>
+          </div>
         </div>
 
         <div className="sticky bottom-0 px-5 py-4 bg-[var(--color-surface)] dark:bg-slate-900 border-t border-[var(--color-border)] dark:border-slate-700/50 flex gap-3">

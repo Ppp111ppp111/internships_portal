@@ -1,20 +1,20 @@
-import { useState, useMemo, useCallback, useEffect, useRef } from 'react';
+import { ArrowUpDown, SlidersHorizontal } from 'lucide-react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { useSearchParams } from 'react-router-dom';
-import { SlidersHorizontal, ArrowUpDown } from 'lucide-react';
 
-import { useInternships } from '../hooks/useInternships';
 import { useDebounce } from '../hooks/useDebounce';
+import { useInternships } from '../hooks/useInternships';
 import { useSavedInternships } from '../hooks/useSavedInternships';
-import { applyFilters, sortInternships, extractUniqueLocations } from '../utils/filters';
-import { SORT_OPTIONS, ITEMS_PER_PAGE } from '../utils/constants';
+import { ITEMS_PER_PAGE, SORT_OPTIONS } from '../utils/constants';
+import { applyFilters, extractUniqueLocations, sortInternships } from '../utils/filters';
 
-import Navbar from '../components/Navbar/Navbar';
-import FilterSidebar from '../components/Filters/FilterSidebar';
+import EmptyState from '../components/EmptyState/EmptyState';
 import FilterChips from '../components/Filters/FilterChips';
+import FilterSidebar from '../components/Filters/FilterSidebar';
 import MobileFilterDrawer from '../components/Filters/MobileFilterDrawer';
 import InternshipCard from '../components/InternshipCard/InternshipCard';
 import { SkeletonGrid } from '../components/Loader/SkeletonCard';
-import EmptyState from '../components/EmptyState/EmptyState';
+import Navbar from '../components/Navbar/Navbar';
 
 function parseParams(searchParams) {
   return {
@@ -175,20 +175,7 @@ export default function SearchPage() {
               onClearAll={handleClearAll}
             />
 
-            <div className="flex items-center justify-between mb-4">
-              <p className="text-sm text-[var(--color-text-secondary)] dark:text-slate-400">
-                {loading ? (
-                  <span className="inline-block w-32 h-4 rounded shimmer" />
-                ) : (
-                  <>
-                    <span className="font-semibold text-[var(--color-text-primary)] dark:text-white">
-                      {sortedInternships.length}
-                    </span>{' '}
-                    {sortedInternships.length === 1 ? 'internship' : 'internships'} found
-                  </>
-                )}
-              </p>
-
+            <div className="flex items-center justify-end mb-4">
               <div className="relative">
                 <ArrowUpDown size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-[var(--color-text-muted)] pointer-events-none" />
                 <select

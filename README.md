@@ -17,7 +17,7 @@ A production-ready React application that replicates a professional internship s
 - **Mobile Filter Drawer** — Slide-up bottom sheet for filters on small screens
 - **Loading Skeletons** — Shimmer-animated placeholder cards during data fetch
 - **Active Filter Chips** — Visual tags with one-click removal
-- **Framer Motion Animations** — Smooth card enter/exit and filter transitions
+
 
 ## Tech Stack
 
